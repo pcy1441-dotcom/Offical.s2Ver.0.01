@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>6인방</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, "Noto Sans KR", sans-serif;
+    background: #f4f6fb;
+    color: #202124;
+}
+
+.container {
+    width: min(720px, calc(100% - 30px));
+    margin: 0 auto;
+    padding: 35px 0 60px;
+}
+
+h1 {
+    text-align: center;
+    font-size: 34px;
+    margin: 0 0 8px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #777;
+    margin-bottom: 30px;
+}
+
+.card {
+    background: white;
+    border-radius: 20px;
+    padding: 22px;
+    margin-bottom: 18px;
+    box-shadow: 0 6px 25px rgba(0,0,0,.06);
+}
+
+h2 {
+    margin-top: 0;
+}
+
+input, select, button {
+    font: inherit;
+}
+
+input, select {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: white;
+}
+
+button {
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    filter: brightness(.95);
+}
+
+.nav {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.nav button {
+    flex: 1;
+    background: #e9ebf2;
+}
+
+.nav button.active {
+    background: #4f46e5;
+    color: white;
+}
+
+/* 참가자 */
+
+.add-box {
+    display: flex;
+    gap: 8px;
+}
+
+.add-box input {
+    flex: 1;
+}
+
+.add-box button {
+    background: #222;
+    color: white;
+}
+
+.player-count {
+    color: #777;
+    margin: 15px 0 10px;
+}
+
+.players {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.player {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #eef0f5;
+    padding: 8px 12px;
+    border-radius: 20px;
+}
+
+.player button {
+    padding: 0;
+    background: none;
+    color: #888;
+}
+
+/* 설정 */
+
+.setting {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 12px 0;
+}
+
+.team-sizes {
+    display: grid;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.ban-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.ban-row select {
+    flex: 1;
+}
+
+.remove-ban {
+    background: #ef4444;
+    color: white;
+}
+
+/* 메인 버튼 */
+
+.main-button {
+    width: 100%;
+    padding: 16px;
+    font-size: 18px;
+    color: white;
+    background: #4f46e5;
+}
+
+/* 결과 */
+
+.hidden {
+    display: none;
+}
+
+.result {
+    display: grid;
+    gap: 12px;
+}
+
+.team {
+    border-radius: 15px;
+    padding: 16px;
+    background: #f1f3f8;
+}
+
+.team h3 {
+    margin: 0 0 10px;
+}
+
+.member {
+    background: white;
+    padding: 10px;
+    border-radius: 9px;
+    margin-top: 6px;
+}
+
+/* 한 명 뽑기 */
+
+.draw-box {
+    text-align: center;
+}
+
+.draw-display {
+    height: 180px;
+    border-radius: 20px;
+    background: #f1f3f8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 42px;
+    font-weight: bold;
+    margin: 20px 0;
+    overflow: hidden;
+}
+
+.draw-display.spinning {
+    animation: pulse .12s infinite alternate;
+}
+
+@keyframes pulse {
+    from {
+        transform: scale(1);
+    }
+    to {
+        transform: scale(1.025);
+    }
+}
+
+.winner {
+    animation: winner .7s ease;
+}
+
+@keyframes winner {
+    0% {
+        transform: scale(.7);
+        opacity: 0;
+    }
+
+    60% {
+        transform: scale(1.12);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    margin: 15px 0;
+}
+
+.error {
+    color: #e53935;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.success {
+    color: #16a34a;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+@media (max-width: 500px) {
+    .draw-display {
+        font-size: 30px;
+    }
+
+    .ban-row {
+        flex-wrap: wrap;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🎲 6인방</h1>
+<div class="subtitle">친구들과 랜덤으로 결정하기</div>
+
+<div class="nav">
+    <button id="teamTab" class="active" onclick="showPage('team')">
+        ⚔️ 팀 배정
+    </button>
+
+    <button id="drawTab" onclick="showPage('draw')">
+        👤 한 명 뽑기
+    </button>
+</div>
+
+
+<!-- =========================
+     팀 배정
+========================= -->
+
+<div id="teamPage">
+
+    <div class="card">
+        <h2>👥 참가자</h2>
+
+        <div class="add-box">
+            <input id="teamPlayerInput"
+                   placeholder="이름 입력"
+                   onkeydown="enterAdd(event, 'team')">
+
+            <button onclick="addSharedPlayer('team')">
+                추가
+            </button>
+        </div>
+
+        <div id="teamPlayerCount" class="player-count"></div>
+        <div id="teamPlayers" class="players"></div>
+    </div>
+
+
+    <div class="card">
+        <h2>⚙️ 팀 설정</h2>
+
+        <div class="setting">
+            <span>팀 수</span>
+
+            <select id="teamCount"
+                    onchange="updateTeamSizes()">
+                <option value="2">2팀</option>
+                <option value="3">3팀</option>
+                <option value="4">4팀</option>
+            </select>
+        </div>
+
+        <div id="teamSizes" class="team-sizes"></div>
+    </div>
+
+
+    <div class="card">
+        <h2>🚫 같은 팀 금지</h2>
+
+        <div id="banList"></div>
+
+        <button onclick="addBan()">
+            ＋ 금지 조합 추가
+        </button>
+    </div>
+
+
+    <div class="card">
+        <button class="main-button"
+                onclick="makeTeams()">
+            🎲 팀 배정하기
+        </button>
+
+        <div id="teamError" class="error"></div>
+    </div>
+
+
+    <div id="teamResultCard" class="card hidden">
+
+        <h2>🏆 배정 결과</h2>
+
+        <div id="teamResult" class="result"></div>
+
+        <br>
+
+        <button class="main-button"
+                onclick="makeTeams()">
+            🔄 다시 배정
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     한 명 뽑기
+========================= -->
+
+<div id="drawPage" class="hidden">
+
+    <div class="card">
+
+        <h2>👥 참가자</h2>
+
+        <div class="add-box">
+
+            <input id="drawPlayerInput"
+                   placeholder="이름 입력"
+                   onkeydown="enterAdd(event, 'draw')">
+
+            <button onclick="addSharedPlayer('draw')">
+                추가
+            </button>
+
+        </div>
+
+        <div id="drawPlayerCount" class="player-count"></div>
+        <div id="drawPlayers" class="players"></div>
+
+    </div>
+
+
+    <div class="card draw-box">
+
+        <h2>🎰 한 명 뽑기</h2>
+
+        <div class="checkbox">
+            <input type="checkbox"
+                   id="noRepeat">
+
+            <label for="noRepeat">
+                중복 없이 뽑기
+            </label>
+        </div>
+
+        <div class="draw-display" id="drawDisplay">
+            준비 완료
+        </div>
+
+        <button class="main-button"
+                onclick="drawOne()">
+            🎲 뽑기
+        </button>
+
+        <div id="drawMessage"></div>
+
+    </div>
+
+</div>
+
+</div>
+
+
+<script>
+
+/* =========================================
+   공유 참가자 목록
+========================================= */
+
+let players = [
+    "파인애플",
+    "이준이",
+    "안다윤",
+    "김하준",
+    "양예윤",
+    "이연지"
+];
+
+let usedPlayers = [];
+
+
+/* =========================================
+   페이지 전환
+========================================= */
+
+function showPage(page) {
+
+    const teamPage = document.getElementById("teamPage");
+    const drawPage = document.getElementById("drawPage");
+
+    const teamTab = document.getElementById("teamTab");
+    const drawTab = document.getElementById("drawTab");
+
+    if (page === "team") {
+
+        teamPage.classList.remove("hidden");
+        drawPage.classList.add("hidden");
+
+        teamTab.classList.add("active");
+        drawTab.classList.remove("active");
+
+    } else {
+
+        teamPage.classList.add("hidden");
+        drawPage.classList.remove("hidden");
+
+        teamTab.classList.remove("active");
+        drawTab.classList.add("active");
+    }
+}
+
+
+/* =========================================
+   참가자 관리
+========================================= */
+
+function addSharedPlayer(source) {
+
+    const input = document.getElementById(
+        source === "team"
+            ? "teamPlayerInput"
+            : "drawPlayerInput"
+    );
+
+    const name = input.value.trim();
+
+    if (!name) return;
+
+    if (players.includes(name)) {
+        alert("이미 등록된 이름입니다.");
+        return;
+    }
+
+    players.push(name);
+    input.value = "";
+
+    renderPlayers();
+    updateBanSelects();
+    updateTeamSizes();
+}
+
+
+function removeSharedPlayer(index) {
+
+    players.splice(index, 1);
+
+    usedPlayers =
+        usedPlayers.filter(
+            name => players.includes(name)
+        );
+
+    renderPlayers();
+    updateBanSelects();
+    updateTeamSizes();
+}
+
+
+function renderPlayers() {
+
+    const teamList =
+        document.getElementById("teamPlayers");
+
+    const drawList =
+        document.getElementById("drawPlayers");
+
+    teamList.innerHTML = "";
+    drawList.innerHTML = "";
+
+    players.forEach((player, index) => {
+
+        const teamDiv = document.createElement("div");
+        teamDiv.className = "player";
+
+        teamDiv.innerHTML = `
+            ${escapeHtml(player)}
+            <button onclick="removeSharedPlayer(${index})">
+                ✕
+            </button>
+        `;
+
+        teamList.appendChild(teamDiv);
+
+
+        const drawDiv = document.createElement("div");
+        drawDiv.className = "player";
+
+        drawDiv.innerHTML = `
+            ${escapeHtml(player)}
+            <button onclick="removeSharedPlayer(${index})">
+                ✕
+            </button>
+        `;
+
+        drawList.appendChild(drawDiv);
+    });
+
+
+    document.getElementById("teamPlayerCount")
+        .textContent =
+        `현재 ${players.length}명`;
+
+    document.getElementById("drawPlayerCount")
+        .textContent =
+        `현재 ${players.length}명`;
+}
+
+
+function enterAdd(event, source) {
+
+    if (event.key === "Enter") {
+        addSharedPlayer(source);
+    }
+}
+
+
+/* =========================================
+   팀 설정
+========================================= */
+
+function updateTeamSizes() {
+
+    const count =
+        Number(document.getElementById("teamCount").value);
+
+    const container =
+        document.getElementById("teamSizes");
+
+    const oldValues =
+        [...container.querySelectorAll("input")]
+            .map(input => Number(input.value));
+
+    container.innerHTML = "";
+
+    for (let i = 0; i < count; i++) {
+
+        const defaultSize =
+            oldValues[i] ??
+            Math.floor(players.length / count);
+
+        const row =
+            document.createElement("div");
+
+        row.className = "setting";
+
+        row.innerHTML = `
+            <span>${teamName(i)} 인원</span>
+
+            <input
+                type="number"
+                min="0"
+                value="${defaultSize}"
+                id="teamSize${i}"
+                style="width:80px"
+            >
+        `;
+
+        container.appendChild(row);
+    }
+}
+
+
+function teamName(index) {
+
+    return String.fromCharCode(65 + index) + "팀";
+}
+
+
+/* =========================================
+   같은 팀 금지
+========================================= */
+
+function addBan() {
+
+    if (players.length < 2) {
+        alert("참가자가 2명 이상 필요합니다.");
+        return;
+    }
+
+    const container =
+        document.getElementById("banList");
+
+    const row =
+        document.createElement("div");
+
+    row.className = "ban-row";
+
+    row.innerHTML = `
+        <select class="ban-player"></select>
+
+        <span>↔</span>
+
+        <select class="ban-player"></select>
+
+        <button class="remove-ban"
+                onclick="this.parentElement.remove()">
+            ✕
+        </button>
+    `;
+
+    container.appendChild(row);
+
+    updateBanSelects();
+}
+
+
+function updateBanSelects() {
+
+    document
+        .querySelectorAll(".ban-player")
+        .forEach(select => {
+
+            const oldValue = select.value;
+
+            select.innerHTML = "";
+
+            players.forEach(player => {
+
+                const option =
+                    document.createElement("option");
+
+                option.value = player;
+                option.textContent = player;
+
+                select.appendChild(option);
+            });
+
+            if (players.includes(oldValue)) {
+                select.value = oldValue;
+            }
+        });
+}
+
+
+function getBannedPairs() {
+
+    const pairs = [];
+
+    document
+        .querySelectorAll(".ban-row")
+        .forEach(row => {
+
+            const selects =
+                row.querySelectorAll("select");
+
+            if (selects.length !== 2) return;
+
+            const a = selects[0].value;
+            const b = selects[1].value;
+
+            if (a && b && a !== b) {
+                pairs.push([a, b]);
+            }
+        });
+
+    return pairs;
+}
+
+
+/* =========================================
+   팀 배정
+========================================= */
+
+function makeTeams() {
+
+    const error =
+        document.getElementById("teamError");
+
+    error.textContent = "";
+
+    if (players.length === 0) {
+        error.textContent =
+            "참가자를 먼저 추가하세요.";
+        return;
+    }
+
+    const count =
+        Number(document.getElementById("teamCount").value);
+
+    const sizes = [];
+
+    for (let i = 0; i < count; i++) {
+
+        sizes.push(
+            Number(
+                document.getElementById(`teamSize${i}`).value
+            )
+        );
+    }
+
+    const total =
+        sizes.reduce((a, b) => a + b, 0);
+
+    if (total !== players.length) {
+
+        error.textContent =
+            `팀 인원의 합계가 참가자 수(${players.length}명)와 같아야 합니다.`;
+
+        return;
+    }
+
+    const bannedPairs =
+        getBannedPairs();
+
+
+    for (let attempt = 0; attempt < 20000; attempt++) {
+
+        const shuffled =
+            [...players].sort(
+                () => Math.random() - 0.5
+            );
+
+        const teams = [];
+
+        let index = 0;
+
+        for (let i = 0; i < count; i++) {
+
+            teams.push(
+                shuffled.slice(
+                    index,
+                    index + sizes[i]
+                )
+            );
+
+            index += sizes[i];
+        }
+
+        if (isValidTeams(teams, bannedPairs)) {
+
+            showTeams(teams);
+            return;
+        }
+    }
+
+    error.textContent =
+        "조건을 만족하는 배정을 찾지 못했습니다.";
+}
+
+
+function isValidTeams(teams, bannedPairs) {
+
+    for (const [a, b] of bannedPairs) {
+
+        for (const team of teams) {
+
+            if (
+                team.includes(a) &&
+                team.includes(b)
+            ) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+
+function showTeams(teams) {
+
+    const result =
+        document.getElementById("teamResult");
+
+    result.innerHTML = "";
+
+    teams.forEach((team, index) => {
+
+        const div =
+            document.createElement("div");
+
+        div.className = "team";
+
+        div.innerHTML = `
+            <h3>${teamName(index)}</h3>
+
+            ${team.map(member => `
+                <div class="member">
+                    ${escapeHtml(member)}
+                </div>
+            `).join("")}
+        `;
+
+        result.appendChild(div);
+    });
+
+    document
+        .getElementById("teamResultCard")
+        .classList.remove("hidden");
+}
+
+
+/* =========================================
+   한 명 뽑기
+========================================= */
+
+function drawOne() {
+
+    const display =
+        document.getElementById("drawDisplay");
+
+    const message =
+        document.getElementById("drawMessage");
+
+    message.textContent = "";
+
+    if (players.length === 0) {
+
+        message.className = "error";
+        message.textContent =
+            "참가자를 먼저 추가하세요.";
+
+        return;
+    }
+
+
+    let candidates =
+        [...players];
+
+
+    /* 중복 방지 */
+    if (
+        document.getElementById("noRepeat").checked
+    ) {
+
+        candidates =
+            candidates.filter(
+                player =>
+                    !usedPlayers.includes(player)
+            );
+
+        if (candidates.length === 0) {
+
+            message.className = "success";
+            message.textContent =
+                "🎉 모든 참가자가 한 번씩 뽑혔습니다!";
+
+            return;
+        }
+    }
+
+
+    const winner =
+        candidates[
+            Math.floor(
+                Math.random() * candidates.length
+            )
+        ];
+
+
+    display.classList.remove("winner");
+    display.classList.add("spinning");
+
+
+    /*
+       이름이 빠르게 지나가다가
+       점점 느려지는 효과
+    */
+
+    const duration = 2600;
+    const start = Date.now();
+
+    function animationFrame() {
+
+        const elapsed =
+            Date.now() - start;
+
+        const progress =
+            Math.min(elapsed / duration, 1);
+
+        /*
+           처음에는 빠르고
+           마지막에는 느려짐
+        */
+
+        const ease =
+            1 - Math.pow(1 - progress, 3);
+
+        const interval =
+            40 + ease * 280;
+
+        const randomName =
+            candidates[
+                Math.floor(
+                    Math.random() *
+                    candidates.length
+                )
+            ];
+
+        display.textContent = randomName;
+
+
+        if (progress < 1) {
+
+            setTimeout(
+                animationFrame,
+                interval
+            );
+
+        } else {
+
+            display.textContent = winner;
+
+            display.classList.remove("spinning");
+
+            /*
+               애니메이션 재시작
+            */
+
+            void display.offsetWidth;
+
+            display.classList.add("winner");
+
+
+            if (
+                document.getElementById("noRepeat").checked
+            ) {
+                usedPlayers.push(winner);
+            }
+
+            message.className = "success";
+            message.textContent =
+                `🎉 ${winner} 당첨!`;
+        }
+    }
+
+    animationFrame();
+}
+
+
+/* =========================================
+   HTML 안전 처리
+========================================= */
+
+function escapeHtml(text) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent = text;
+
+    return div.innerHTML;
+}
+
+
+/* =========================================
+   초기화
+========================================= */
+
+renderPlayers();
+updateTeamSizes();
+
+</script>
+
+</body>
+</html>
